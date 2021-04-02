@@ -1,5 +1,8 @@
 # MSiA423 Template Repository
 
+Author: Hao Xu
+QA: Junpeng (Marshall) Jiang
+
 <!-- toc -->
 
 - [Directory structure](#directory-structure)
