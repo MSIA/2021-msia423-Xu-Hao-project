@@ -1,8 +1,8 @@
 # MSiA423 Template Repository
 
-Author: Hao Xu
+**Author:** Hao Xu
 
-QA: Junpeng (Marshall) Jiang
+**QA:** Junpeng (Marshall) Jiang
 
 <!-- toc -->
 
