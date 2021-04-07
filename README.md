@@ -4,8 +4,9 @@
 
 **QA:** Junpeng (Marshall) Jiang
 
-<!-- toc -->
 
+<!-- toc -->
+- [Project Charter](#project_charter)
 - [Directory structure](#directory-structure)
 - [Running the app](#running-the-app)
   * [1. Initialize the database](#1-initialize-the-database)
@@ -22,6 +23,52 @@
   * [Workaround for potential Docker problem for Windows.](#workaround-for-potential-docker-problem-for-windows)
 
 <!-- tocstop -->
+
+
+## Project Charter
+
+#### Background 
+It's always a good practice in the photography community to frequently browse others' works to get inspiration and new ideas. Some common destinations for photo galleries include [Adobe Stock](https://stock.adobe.com/), [500px.com](https://500px.com/), [Pinterest](https://www.pinterest.com/) etc. Besides, for customization, most professional photographers also build their personal websites to showcase their works and share ideas. However, without proper labeling, photographers sometimes find it harder to quickly find photos in a certain style from such a huge volume of available sources.
+
+#### Vision
+To make the photos better organized and easier to find, big platforms like 500px.com always enable users to tag their pictures with meaningful labels so they can make recommendations based on similarities. However, users aren't obligated to tag their uploads properly, and the labels are not always accurate. On top of that, it's is even harder for photographers who build their own websites to create and deploy recommendation systems to engage their visitors. 
+
+This app is designed to solve the problem by building unsupervised learning models to automatically process all the photos and cluster them into meaningful groups. By doing this, photo gallery websites become capable of finding photos in similar styles without manually labeling them. 
+
+#### Mission
+The user will select (or upload) a photo, and the recommender will output a list of the most similar photos available on the website database leveraging clustering algorithms. The photos that will be used for this project are from my own website: https://elementarydeduction.com/
+
+Example: 
+If a user pick the picture on the left, the system should be able to recommend similar other pictures on the right.
+
+![plot](./figures/examples.png)
+
+#### Success Criteria
+
+##### Machine Learning Metrics
+
+The app will be using unsupervised learning algorithms. As a result, the metrics will be relatively subjective. We will be using clustering evaluation metrics to determine optimal cluster numbers and test the stability of the clustering results. 
+
+Metrics:
+- Silhouette score
+- Within-cluster sum of square 
+
+After the app goes live, we will be using AB tests to measure the effectiveness of the recommendations. Also, with user clicks recorded, we can then calculate recommender evaluation metrics
+
+AB testing metrics:
+- Click-through rate
+- Click through possibility
+
+Recommendation evaluation metircs:
+- MAE / RMSE
+- Precision / Recall / ROC
+- mRR 
+- nDCG
+
+##### Business Metrics
+To measure the business impact, we can perform AB testing on two versions of the websites, one with the recommender deployed and one without. We can then compare the user engagement level, which can be measured by average time spent, number of pictures clicked etc. 
+
+
 
 ## Directory structure 
 
