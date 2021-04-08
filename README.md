@@ -1,4 +1,4 @@
-# MSiA423 Template Repository
+# Find Photos with Similar Style: A MLT Recommendation System Augmenting Photographers' Websites
 
 **Author:** Hao Xu
 
@@ -36,7 +36,7 @@ To make the photos better organized and easier to find, big platforms like 500px
 This app is designed to solve the problem by building unsupervised learning models to automatically process all the photos and cluster them into meaningful groups. By doing this, photo gallery websites become capable of finding photos in similar styles without manually labeling them. 
 
 #### Mission
-The user will select (or upload) a photo, and the recommender will output a list of the most similar photos available on the website database leveraging clustering algorithms. The photos that will be used for this project are from my own website: https://elementarydeduction.com/
+The user will upload a photo (or select an existing photo), and the recommender will output a list of the most similar photos available on the website database leveraging clustering algorithms. The photos that will be used for this project are from my own website: https://elementarydeduction.com/
 
 Example: 
 If a user pick the picture on the left, the system should be able to recommend similar other pictures on the right.
