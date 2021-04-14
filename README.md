@@ -24,7 +24,6 @@
 
 <!-- tocstop -->
 
-
 ## Project Charter
 
 #### Background 
