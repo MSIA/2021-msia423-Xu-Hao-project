@@ -40,7 +40,7 @@ The user will upload a photo (or select an existing photo), and the recommender 
 Example: 
 If a user pick the picture on the left, the system should be able to recommend similar other pictures on the right.
 
-![plot](./figures/examples.png)
+![plot](./figures/charter_example.png)
 
 #### Success Criteria
 
