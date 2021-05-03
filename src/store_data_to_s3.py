@@ -21,7 +21,7 @@ def _parse_s3(s3path):
     return s3bucket, s3path
 
 
-def upload_to_s3(local_path, s3_path):
+def upload_to_s3(args):
     """ Upload data to S3 bucket. """
     # connect to s3 using aws access key
     try:
@@ -33,20 +33,9 @@ def upload_to_s3(local_path, s3_path):
         logger.error("AWS Credentials Invalid.")
 
     # upload all raw pictures under the local path to s3
-    s3bucket, s3_just_path = _parse_s3(s3_path)
-    for root, dirs, files in os.walk(local_path):
+    bucket_name, s3_store_path = _parse_s3(args.s3_path)
+    for root, dirs, files in os.walk(args.local_path):
         for file in files:
-            s3.upload_file(os.path.join(root, file), s3bucket, os.path.join(s3_just_path, file))
+            s3.upload_file(os.path.join(root, file), bucket_name, os.path.join(s3_store_path, file))
             logger.info("{} Uploaded.".format(file))
     logger.info("All Image Uploaded to S3.")
-
-
-if __name__ == '__main__':
-    # parse arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--s3_path', required=True)
-    parser.add_argument('--local_path', required=True)
-    args = parser.parse_args()
-
-    # upload raw images to s3 bucket
-    upload_to_s3(args.local_path, args.s3_path)
