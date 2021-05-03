@@ -143,7 +143,7 @@ docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY image_app run.py upload
 
 ## Running Application
 
-### 1. Store model serving data to RDS
+### 1. Create DB in RDS
 
 
 ### 2. Build docker image
