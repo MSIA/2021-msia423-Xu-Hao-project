@@ -6,22 +6,13 @@
 
 
 <!-- toc -->
-- [Project Charter](#project_charter)
+- [Project Charter](#project-charter)
 - [Directory structure](#directory-structure)
 - [Running the app](#running-the-app)
-  * [1. Initialize the database](#1-initialize-the-database)
-    + [Create the database with a single song](#create-the-database-with-a-single-song)
-    + [Adding additional songs](#adding-additional-songs)
-    + [Defining your engine string](#defining-your-engine-string)
-      - [Local SQLite database](#local-sqlite-database)
-  * [2. Configure Flask app](#2-configure-flask-app)
-  * [3. Run the Flask app](#3-run-the-flask-app)
-- [Running the app in Docker](#running-the-app-in-docker)
-  * [1. Build the image](#1-build-the-image)
-  * [2. Run the container](#2-run-the-container)
-  * [3. Kill the container](#3-kill-the-container)
-  * [Workaround for potential Docker problem for Windows.](#workaround-for-potential-docker-problem-for-windows)
-
+  * [1. Build docker image](#1-build-docker-image)
+  * [2. Upload raw dataset to S3 bucket](#2-upload-raw-dataset-to-s3-bucket)
+  * [3. Create DB in RDS](#3-create-db-in-rds)
+  
 <!-- tocstop -->
 
 ## Project Charter
@@ -65,11 +56,9 @@ Recommendation evaluation metircs:
 - nDCG
 
 ##### Business Metrics
-To measure the business impact, we can perform AB testing on two versions of the websites, one with the recommender deployed and one without. We can then compare the user engagement level, which can be measured by average time spent, number of pictures clicked etc. 
+To measure the business impact, we can perform AB testing on two versions of the websites, one with the recommender deployed and one without. We can then compare the user engagement level, which can be measured by average time spent, number of pictures clicked etc.
 
-
-
-## Directory structure 
+## Directory Structure
 
 ```
 ├── README.md                         <- You are here
@@ -113,7 +102,7 @@ To measure the business impact, we can perform AB testing on two versions of the
 ├── requirements.txt                  <- Python package dependencies 
 ```
 
-## Running Model Pipeline
+## Running the App
 ### 1. Build docker image
 ```
 docker build -t image_app .
@@ -138,12 +127,52 @@ docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY image_app run.py upload
 ```
 example:
 ```
-docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY image_app run.py upload --s3_path='s3://2021-msia423-xu-hao/test' --local_path='./data/raw_images'
+docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY image_app run.py upload --s3_path='s3://2021-msia423-xu-hao/raw' --local_path='./data/raw_images'
 ```
 
-## Running Application
+### 3. Create DB in RDS
 
-### 1. Create DB in RDS
+#### 1.1
+Setup environmental variables for database connection:
 
+```
+export MYSQL_USER=<Your RDS Username>
+export MYSQL_PASSWORD=<Your RDS Password>
+export MYSQL_PORT=3306
+export DATABASE_NAME=msia_423_DB
+export MYSQL_HOST=msia-423-hxq9433.cy33ytpnmyxx.us-east-2.rds.amazonaws.com
+```
 
-### 2. Build docker image
+Alternatively, you can also edit the file `.mysqlconfig` in /config.
+
+```
+vi .mysqlconfig
+``` 
+
+Update the following credentials which will be used to create the database:
+
+- MYSQL_USER: <Your RDS Username>
+- MYSQL_PASSWORD: <Your RDS Password>
+- MYSQL_PORT: 3306 
+- DATABASE_NAME: msia_423_DB
+- MYSQL_HOST: msia-423-hxq9433.cy33ytpnmyxx.us-east-2.rds.amazonaws.com
+
+Save your file and set these environment variables via:
+
+```
+source config/.mysqlconfig
+```
+
+> **_NOTE:_**  Need to do this each time you open a new terminal. Alternatively, you can add source `/path/to/.mysqconfig` to your `~/.bashrc` or `~/.zshrc`
+
+#### 1.2 Connect to Northwestern University VPN
+
+**IMPORTANT**: VERIFY THAT YOU ARE ON THE NORTHWESTERN VPN BEFORE YOU CONTINUE ON
+
+### 1.3 Create Schema and Populate Tables on RDS
+
+Create database tables:
+
+```
+docker run -e MYSQL_USER -e MYSQL_PASSWORD -e MYSQL_PORT -e DATABASE_NAME -e MYSQL_HOST image_app run.py create_db
+```

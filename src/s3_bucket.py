@@ -23,7 +23,7 @@ def _parse_s3(s3path):
 
 def upload_to_s3(args):
     """ Upload data to S3 bucket. """
-    # connect to s3 using aws access key
+    # Connect to s3 using aws access key
     try:
         s3 = boto3.client('s3',
                           aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
@@ -32,7 +32,7 @@ def upload_to_s3(args):
     except botocore.exceptions.PartialCredentialsError:
         logger.error("AWS Credentials Invalid.")
 
-    # upload all raw pictures under the local path to s3
+    # Upload all raw pictures under the local path to s3
     bucket_name, s3_store_path = _parse_s3(args.s3_path)
     for root, dirs, files in os.walk(args.local_path):
         for file in files:
