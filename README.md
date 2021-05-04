@@ -58,6 +58,8 @@ Recommendation evaluation metircs:
 ##### Business Metrics
 To measure the business impact, we can perform AB testing on two versions of the websites, one with the recommender deployed and one without. We can then compare the user engagement level, which can be measured by average time spent, number of pictures clicked etc.
 
+<br />
+
 ## Directory Structure
 
 ```
@@ -102,15 +104,18 @@ To measure the business impact, we can perform AB testing on two versions of the
 ├── requirements.txt                  <- Python package dependencies 
 ```
 
+<br />
+
 ## Running the App
-### 1. Build docker image
+##### 1. Build docker image
 ```
 docker build -t image_app .
 ```
+<br />
 
 ### 2. Upload raw dataset to S3 bucket
 
-#### 1.1 Add Configuration for AWS S3 bucket
+##### 2.1 Add Configuration for AWS S3 bucket
 
 Configure environment variable to store your AWS access_key_id and secret_access_key:
 
@@ -120,7 +125,7 @@ export AWS_ACCESS_KEY_ID=<Your Access Key ID>
 export AWS_SECRET_ACCESS_KEY=<Your Secret Key ID>
 ```
 
-#### 1.2 Upload Raw Data to S3
+##### 2.2 Upload Raw Data to S3
 
 ```
 docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY image_app run.py upload --s3_path=<s3 directory path> --local_path=<local directory with all raw images>
@@ -129,11 +134,11 @@ example:
 ```
 docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY image_app run.py upload --s3_path='s3://2021-msia423-xu-hao/raw' --local_path='./data/raw_images'
 ```
+<br />
 
 ### 3. Create DB in RDS
 
-#### 1.1
-Setup environmental variables for database connection:
+##### 3.1 Setup environmental variables for database connection:
 
 ```
 export MYSQL_USER=<Your RDS Username>
@@ -165,11 +170,11 @@ source config/.mysqlconfig
 
 > **_NOTE:_**  Need to do this each time you open a new terminal. Alternatively, you can add source `/path/to/.mysqconfig` to your `~/.bashrc` or `~/.zshrc`
 
-#### 1.2 Connect to Northwestern University VPN
+##### 3.2 Connect to Northwestern University VPN
 
 **IMPORTANT**: VERIFY THAT YOU ARE ON THE NORTHWESTERN VPN BEFORE YOU CONTINUE ON
 
-### 1.3 Create Schema and Populate Tables on RDS
+##### 3.3 Create Schema and Populate Tables on RDS
 
 Create database tables:
 
