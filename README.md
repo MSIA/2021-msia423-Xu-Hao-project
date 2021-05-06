@@ -107,7 +107,7 @@ To measure the business impact, we can perform AB testing on two versions of the
 <br />
 
 ## Running the App
-#### 1. Build docker image
+### 1. Build docker image
 ```
 docker build -t image_app .
 ```

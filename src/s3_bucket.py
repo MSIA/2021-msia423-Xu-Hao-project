@@ -1,17 +1,22 @@
 import os
 import re
-import argparse
 import logging
 import boto3
 import botocore.exceptions
 
 logger = logging.getLogger(__name__)
 
+
 def _parse_s3(s3path):
+    """Parse s3 path. Source: https://github.com/MSIA/2021-msia423/blob/main/aws-s3/s3.py
+
+    Args:
+        s3path (str): full s3 path
+
+    Returns:
+        str,str: s3bucket name, s3path to store the data
     """
-    Parse s3 path.
-    Source: https://github.com/MSIA/2021-msia423/blob/main/aws-s3/s3.py
-    """
+
     regex = r"s3://([\w._-]+)/([\w./_-]+)"
 
     m = re.match(regex, s3path)
@@ -22,7 +27,16 @@ def _parse_s3(s3path):
 
 
 def upload_to_s3(args):
-    """ Upload data to S3 bucket. """
+    """Upload raw data to S3 bucket.
+
+    Args:
+        args.s3_path (str): target path for uploading raw data on s3 bucket
+        args.local_path (str): local path to the raw data directory
+
+    Returns:
+        None
+
+    """
     # Connect to s3 using aws access key
     try:
         s3 = boto3.client('s3',
@@ -37,5 +51,5 @@ def upload_to_s3(args):
     for root, dirs, files in os.walk(args.local_path):
         for file in files:
             s3.upload_file(os.path.join(root, file), bucket_name, os.path.join(s3_store_path, file))
-            logger.info("{} Uploaded.".format(file))
+            logger.info("{} Uploaded.".format(file))  # log progress
     logger.info("All Image Uploaded to S3.")

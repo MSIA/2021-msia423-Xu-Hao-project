@@ -6,15 +6,13 @@ import pandas as pd
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float
-from sqlalchemy.orm import sessionmaker
 
 logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 
 class Features(Base):
-    """Create a data model for the database to be set up for capturing photo features
-    """
+    """Data model for the database to be set up for capturing photo features。"""
 
     __tablename__ = 'features'
 
@@ -53,6 +51,13 @@ class Features(Base):
 
 
 def _generate_engine_string():
+    """
+    Generate the engine string for RDS connection.
+
+    Returns:
+        str: the engin string for RDS connection
+    """
+
     conn_type = "mysql+pymysql"
     user = os.getenv("MYSQL_USER")
     password = os.getenv("MYSQL_PASSWORD")
@@ -64,7 +69,14 @@ def _generate_engine_string():
 
 
 def create_db(args):
-    """ Create database in RDS or local with feature tables. """
+    """Create database in RDS or local with feature tables.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
 
     # Connect to RDS
     engine_string = _generate_engine_string()
@@ -78,8 +90,7 @@ def create_db(args):
     Features.metadata.create_all(engine)
     logger.info("Database created.")
 
-    # Log available tables
+    # Log available tables for reference
     query = "show tables;"
     df = pd.read_sql(query, con=engine)
     logger.info('Tables available: {}'.format(list(df.iloc[:, 0])))
-
