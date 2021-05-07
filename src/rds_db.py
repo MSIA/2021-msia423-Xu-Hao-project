@@ -1,4 +1,3 @@
-import os
 import sys
 import logging
 
@@ -12,7 +11,7 @@ logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 
-class Photo_Features(Base):
+class PhotoFeatures(Base):
     """Data model for the database to be set up for capturing photo features。"""
 
     __tablename__ = 'photo_features'
@@ -55,7 +54,7 @@ def create_db(args):
     """Create database in RDS or local with feature tables.
 
     Args:
-        engine_string (str): engine string for data based creation.
+        args.engine_string (str): engine string for data based creation.
 
     Returns:
         None
@@ -70,7 +69,7 @@ def create_db(args):
         sys.exit(1)
 
     # Create schema
-    Photo_Features.metadata.create_all(engine)
+    PhotoFeatures.metadata.create_all(engine)
     logger.info("Database created.")
 
 
