@@ -145,8 +145,8 @@ docker run \
 
 ### 3. Create DB Locally
 
-By default, if RDS databased connection info is not provided, a local sqlite databased will be created at `sqlite:///data/pokemons.db`.  
-(You can also specify your own engine_string if provided by providing environment varibale `SQLALCHEMY_DATABASE_URI`.)
+By default, if RDS databased connection info is not provided, a local sqlite databased will be created at `sqlite:///data/photos.db`.  
+(You can also specify your own engine_string if provided by providing environment variable `SQLALCHEMY_DATABASE_URI`.)
 
 #### 3.1 Setup environmental variable (Optional):
 
