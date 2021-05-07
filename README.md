@@ -128,17 +128,50 @@ export AWS_SECRET_ACCESS_KEY=<Your Secret Key ID>
 #### 2.2 Upload Raw Data to S3
 
 ```
-docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY image_app run.py upload --s3_path=<s3 directory path> --local_path=<local directory with all raw images>
+docker run \
+  -e AWS_ACCESS_KEY_ID \
+  -e AWS_SECRET_ACCESS_KEY \
+  image_app run.py upload --s3_path=<s3_directory_path> --local_path=<local_data_directory_path>
 ```
 example:
 ```
-docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY image_app run.py upload --s3_path='s3://2021-msia423-xu-hao/raw' --local_path='./data/raw_images'
+docker run \
+  -e AWS_ACCESS_KEY_ID \
+  -e AWS_SECRET_ACCESS_KEY \
+  image_app run.py upload --s3_path='s3://2021-msia423-xu-hao/raw' --local_path='./data/raw_images'
 ```
 <br />
 
-### 3. Create DB in RDS
 
-#### 3.1 Setup environmental variables for database connection:
+#### 3. Create DB Locally
+
+By default, if RDS databased connection info is not provided, a local sqlite databased will be created at `sqlite:///data/pokemons.db`.  
+(You can also specify your own engine_string if provided by providing environment varibale `SQLALCHEMY_DATABASE_URI`.)
+
+#### 3.1 Setup environmental variable (Optional):
+
+```
+export SQLALCHEMY_DATABASE_URI=<Customized Engine String>
+```
+
+#### 3.2 Create DB locally:
+
+```
+docker run image_app run.py create_db
+```
+
+or if environment variable `SQLALCHEMY_DATABASE_URI` is set up, run:
+
+```
+docker run -e SQLALCHEMY_DATABASE_URI image_app run.py create_db
+```
+
+<br />
+
+
+### 4. Create DB in RDS
+
+#### 4.1 Setup environmental variables for database connection:
 
 ```
 export MYSQL_USER=<Your RDS Username>
@@ -170,14 +203,40 @@ source config/.mysqlconfig
 
 > **_NOTE:_**  Need to do this each time you open a new terminal. Alternatively, you can add source `/path/to/.mysqconfig` to your `~/.bashrc` or `~/.zshrc`
 
-#### 3.2 Connect to Northwestern University VPN
+#### 4.2 Connect to Northwestern University VPN
 
 **IMPORTANT**: VERIFY THAT YOU ARE ON THE NORTHWESTERN VPN BEFORE YOU CONTINUE ON
 
-#### 3.3 Create Schema and Populate Tables on RDS
+#### 4.3 Create Schema and Populate Tables on RDS
 
 Create database tables:
 
 ```
-docker run -e MYSQL_USER -e MYSQL_PASSWORD -e MYSQL_PORT -e DATABASE_NAME -e MYSQL_HOST image_app run.py create_db
+docker run \
+  -e MYSQL_USER \
+  -e MYSQL_PASSWORD \
+  -e MYSQL_PORT \
+  -e DATABASE_NAME \
+  -e MYSQL_HOST \
+  image_app run.py create_db
+```
+
+#### 4.4 Test Database Creation on RDS:
+
+Connect to RDS databased via docker (same as before, please set up the corresponding environment variables):
+```
+docker run -it --rm \
+    mysql:5.7.33 \
+    mysql \
+    -h$MYSQL_HOST \
+    -u$MYSQL_USER \
+    -p$MYSQL_PASSWORD \
+    
+```
+
+Then in the interactive mysql session, use the following queries to check if table is created successfully:
+
+```
+use msia_423_DB;
+show tables;
 ```

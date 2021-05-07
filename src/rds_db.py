@@ -2,19 +2,20 @@ import os
 import sys
 import logging
 
-import pandas as pd
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy.orm import sessionmaker
+from flask_sqlalchemy import SQLAlchemy
 
 logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 
-class Features(Base):
+class Photo_Features(Base):
     """Data model for the database to be set up for capturing photo features。"""
 
-    __tablename__ = 'features'
+    __tablename__ = 'photo_features'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=False, nullable=False)
@@ -50,36 +51,18 @@ class Features(Base):
     purple_average_L = Column(Float, unique=False, nullable=False)
 
 
-def _generate_engine_string():
-    """
-    Generate the engine string for RDS connection.
-
-    Returns:
-        str: the engin string for RDS connection
-    """
-
-    conn_type = "mysql+pymysql"
-    user = os.getenv("MYSQL_USER")
-    password = os.getenv("MYSQL_PASSWORD")
-    host = os.getenv("MYSQL_HOST")
-    port = os.getenv("MYSQL_PORT")
-    db_name = os.getenv("DATABASE_NAME")
-    engine_string = f"{conn_type}://{user}:{password}@{host}:{port}/{db_name}"
-    return engine_string
-
-
 def create_db(args):
     """Create database in RDS or local with feature tables.
 
     Args:
-        None
+        engine_string (str): engine string for data based creation.
 
     Returns:
         None
     """
 
     # Connect to RDS
-    engine_string = _generate_engine_string()
+    engine_string = args.engine_string
     try:
         engine = sqlalchemy.create_engine(engine_string)
     except:
@@ -87,10 +70,30 @@ def create_db(args):
         sys.exit(1)
 
     # Create schema
-    Features.metadata.create_all(engine)
+    Photo_Features.metadata.create_all(engine)
     logger.info("Database created.")
 
-    # Log available tables for reference
-    query = "show tables;"
-    df = pd.read_sql(query, con=engine)
-    logger.info('Tables available: {}'.format(list(df.iloc[:, 0])))
+
+class PhotoManager:
+
+    def __init__(self, app=None, engine_string=None):
+        """
+        Args:
+            app Flask: Flask app
+            engine_string (str): Engine string
+        """
+        if app:
+            self.db = SQLAlchemy(app)
+            self.session = self.db.session
+        elif engine_string:
+            engine = sqlalchemy.create_engine(engine_string)
+            Session = sessionmaker(bind=engine)
+            self.session = Session()
+        else:
+            raise ValueError("Need either an engine string or a Flask app to initialize")
+
+    def close(self) -> None:
+        """Closes session
+        Returns: None
+        """
+        self.session.close()
