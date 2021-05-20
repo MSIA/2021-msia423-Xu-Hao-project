@@ -54,7 +54,7 @@ def create_db(args):
     """Create database in RDS or local with feature tables.
 
     Args:
-        args.engine_string (str): engine string for data based creation.
+        args.engine_string (str): engine string for database's creation.
 
     Returns:
         None
