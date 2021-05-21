@@ -48,8 +48,16 @@ def upload_to_s3(args):
 
     # Upload all raw pictures under the local path to s3
     bucket_name, s3_store_path = _parse_s3(args.s3_path)
-    for root, dirs, files in os.walk(args.local_path):
-        for file in files:
-            s3.upload_file(os.path.join(root, file), bucket_name, os.path.join(s3_store_path, file))
-            logger.info("{} Uploaded.".format(file))  # log progress
+    if len(list(os.walk(args.local_path))) > 0:
+        for root, dirs, files in os.walk(args.local_path):
+            for file in files:
+                s3.upload_file(os.path.join(root, file), bucket_name, os.path.join(s3_store_path, file))
+                logger.info("{} Uploaded.".format(file))  # log progress
+
+    # If a single file path submitted, upload the single file
+    else:
+        filename = args.local_path.split('/')[-1]
+        s3.upload_file(args.local_path, bucket_name, os.path.join(s3_store_path, filename))
+        logger.info("{} Uploaded.".format(filename))  # log progress
+
     logger.info("All Image Uploaded to S3.")
