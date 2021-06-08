@@ -4,5 +4,32 @@ body {
   height: 100%;
   -webkit-font-smoothing: antialiased;
   font-family: 'Open Sans', sans-serif;
-  background-color:#cdced8;
+  background-color:#ffffff;
+  text-align: center;
+}
+
+.myGallery {
+  display: grid;
+  grid-gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.myGallery img {
+  width: 100%;
+}
+
+.myGallery .item {
+  position: relative;
+  overflow: hidden;
+}
+
+.myGallery .item img {
+  vertical-align: middle;
+}
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
 }

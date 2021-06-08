@@ -7,11 +7,19 @@
 
 <!-- toc -->
 - [Project Charter](#project-charter)
-- [Directory structure](#directory-structure)
-- [Running the app](#running-the-app)
-  * [1. Build docker image](#1-build-docker-image)
-  * [2. Upload raw dataset to S3 bucket](#2-upload-raw-dataset-to-s3-bucket)
-  * [3. Create DB in RDS](#3-create-db-in-rds)
+- [Directory Structure](#directory-structure)
+- [Running the App](#running-the-app)
+  * [0. Configurations](#0-configurations)
+  * [1. Build Docker Image](#1-build-docker-image)
+  * [2. Upload/Download raw dataset to/from S3 bucket](#2-uploaddownload-raw-dataset-tofrom-s3-bucket)
+  * [3. Featurize the raw images](#3-featurize-the-raw-images)  
+  * [4. Offline Model Tuning](#4-offline-model-tuning)
+  * [5. Create DB](#5-create-db)
+  * [6. Inject Data to DB](#6-inject-data-to-db)
+  * [7. Move Images to App Serving Static Folder](#7-move-images-to-app-serving-static-folder)  
+  * [8. Run App](#8-run-app)
+  * [9. Other Notes](#9-other-notes)
+    
   
 <!-- tocstop -->
 
@@ -64,8 +72,8 @@ To measure the business impact, we can perform AB testing on two versions of the
 
 ```
 ├── README.md                         <- You are here
-├── api
-│   ├── static/                       <- CSS, JS files that remain static
+├── app
+│   ├── static/                       <- CSS, JS, image files that remain static
 │   ├── templates/                    <- HTML (or other code) that is templated and changes based on a set of inputs
 │   ├── boot.sh                       <- Start up script for launching app in Docker container.
 │   ├── Dockerfile                    <- Dockerfile for building image to run app  
@@ -74,26 +82,17 @@ To measure the business impact, we can perform AB testing on two versions of the
 │   ├── local/                        <- Directory for keeping environment variables and other local configurations that *do not sync** to Github 
 │   ├── logging/                      <- Configuration of python loggers
 │   ├── flaskconfig.py                <- Configurations for Flask API 
+│   ├── model_config.yaml             <- Configurations for Model Pipeline
 │
 ├── data                              <- Folder that contains data used or generated. Only the external/ and sample/ subdirectories are tracked by git. 
-│   ├── external/                     <- External data sources, usually reference data,  will be synced with git
-│   ├── sample/                       <- Sample data used for code development and testing, will be synced with git
+│   ├── model_data/                   <- Save the featurized data for model training
+│   ├── raw_images/                   <- Raw image data
 │
 ├── deliverables/                     <- Any white papers, presentations, final work products that are presented or delivered to a stakeholder 
-│
-├── docs/                             <- Sphinx documentation based on Python docstrings. Optional for this project. 
 │
 ├── figures/                          <- Generated graphics and figures to be used in reporting, documentation, etc
 │
 ├── models/                           <- Trained model objects (TMOs), model predictions, and/or model summaries
-│
-├── notebooks/
-│   ├── archive/                      <- Develop notebooks no longer being used.
-│   ├── deliver/                      <- Notebooks shared with others / in final state
-│   ├── develop/                      <- Current notebooks being used in development.
-│   ├── template.ipynb                <- Template notebook for analysis with useful imports, helper functions, and SQLAlchemy setup. 
-│
-├── reference/                        <- Any reference material relevant to the project
 │
 ├── src/                              <- Source data for the project 
 │
@@ -101,21 +100,20 @@ To measure the business impact, we can perform AB testing on two versions of the
 │
 ├── app.py                            <- Flask wrapper for running the model 
 ├── run.py                            <- Simplifies the execution of one or more of the src scripts  
+├── Dockerfile                        <- Dockerfile for model pipeline
+├── Makefile                          <- Makefile to control the pipeline
 ├── requirements.txt                  <- Python package dependencies 
+├── README.md                         <- MD file
 ```
 
 <br />
 
 ## Running the App
-### 1. Build docker image
-```
-docker build -t image_app .
-```
-<br />
+### 0. Configurations
 
-### 2. Upload raw dataset to S3 bucket
+#### 0.1 Add Configuration for AWS S3 bucket 
+This is used to access S3 bucket for raw image data, you can skip this id you have data locally and plan to deploy the app locally.
 
-#### 2.1 Add Configuration for AWS S3 bucket
 
 Configure environment variable to store your AWS access_key_id and secret_access_key:
 
@@ -125,53 +123,11 @@ export AWS_ACCESS_KEY_ID=<Your Access Key ID>
 export AWS_SECRET_ACCESS_KEY=<Your Secret Key ID>
 ```
 
-#### 2.2 Upload Raw Data to S3
+#### 0.2 Setup environmental variables for database connection:
+Configuration for model serving data DB.
 
-```
-docker run \
-  -e AWS_ACCESS_KEY_ID \
-  -e AWS_SECRET_ACCESS_KEY \
-  image_app run.py upload --s3_path=<s3_directory_path> --local_path=<local_data_directory_path>
-```
-example:
-```
-docker run \
-  -e AWS_ACCESS_KEY_ID \
-  -e AWS_SECRET_ACCESS_KEY \
-  image_app run.py upload --s3_path='s3://2021-msia423-xu-hao/raw' --local_path='./data/raw_images'
-```
-<br />
-
-
-### 3. Create DB Locally
-
-By default, if neither environment variable `MYSQL_HOST` nor environment variable `SQLALCHEMY_DATABASE_URI` is not provided, a local sqlite database will be created at `sqlite:///data/photos.db`.  
-(You can specify your own engine_string by providing environment variable `SQLALCHEMY_DATABASE_URI`.)
-
-#### 3.1 Setup environmental variable (Optional):
-
-```
-export SQLALCHEMY_DATABASE_URI=<Customized Engine String>
-```
-
-#### 3.2 Create DB locally:
-
-```
-docker run image_app run.py create_db
-```
-
-or if environment variable `SQLALCHEMY_DATABASE_URI` is set up, run:
-
-```
-docker run -e SQLALCHEMY_DATABASE_URI image_app run.py create_db
-```
-
-<br />
-
-
-### 4. Create DB in RDS
-
-#### 4.1 Setup environmental variables for database connection:
+#### 0.2.1 RDS variables: 
+This is used to access AWS RDS database, you can skip this if you plan to deploy the app locally.
 
 ```
 export MYSQL_USER=<Your RDS Username>
@@ -180,63 +136,145 @@ export MYSQL_PORT=3306
 export DATABASE_NAME=msia_423_DB
 export MYSQL_HOST=msia-423-hxq9433.cy33ytpnmyxx.us-east-2.rds.amazonaws.com
 ```
-
-Alternatively, you can also edit the file `.mysqlconfig` in /config.
-
-```
-vi .mysqlconfig
-``` 
-
-Update the following credentials which will be used to create the database:
-
-- MYSQL_USER: <Your RDS Username>
-- MYSQL_PASSWORD: <Your RDS Password>
-- MYSQL_PORT: 3306 
-- DATABASE_NAME: msia_423_DB
-- MYSQL_HOST: msia-423-hxq9433.cy33ytpnmyxx.us-east-2.rds.amazonaws.com
-
-Save your file and set these environment variables via:
+#### 0.2.2 Local DB variables: 
+By default, if neither environment variable `MYSQL_HOST` nor environment variable `SQLALCHEMY_DATABASE_URI` is not provided, a local sqlite database will be created at `sqlite:///data/photos.db`.  
+(You can specify your own engine_string by providing environment variable `SQLALCHEMY_DATABASE_URI`.)
 
 ```
-source config/.mysqlconfig
+export SQLALCHEMY_DATABASE_URI=<Customized Engine String>
 ```
 
-> **_NOTE:_**  Need to do this each time you open a new terminal. Alternatively, you can add source `/path/to/.mysqconfig` to your `~/.bashrc` or `~/.zshrc`
+#### 0.3 Configure `config/logging/local.conf`, `model_config.yaml`  and `flaskconfig.py`
 
-#### 4.2 Connect to Northwestern University VPN
+`config/logging/local.conf`: Local logger customization
+`model_config.yaml`: Model pipeline configuration
+`flaskconfig.py`: Web app configuration
 
-**IMPORTANT**: VERIFY THAT YOU ARE ON THE NORTHWESTERN VPN BEFORE YOU CONTINUE ON
+#### 0.4 Configure `Makefile`
+Config the Makefile to control the whole pipeline
 
-#### 4.3 Create Schema and Populate Tables on RDS
+#### 0.5 Connect to Northwestern University VPN
+Only applicable for using the msia-423 deployment as RDS was set to only accessible by NU VPN users.
 
-Create database tables:
+<br />
+
+### 1. Build docker image
+```
+make image
+```
+<br />
+
+### 2. Upload/Download raw dataset to/from S3 bucket
+
+#### 2.1 Upload Raw Data to S3 
+The following command will upload raw images to s3 according to the configurations in `Makefile`.
+This is only needed if you have offline pictures that you want to upload to s3.)
 
 ```
-docker run \
-  -e MYSQL_USER \
-  -e MYSQL_PASSWORD \
-  -e MYSQL_PORT \
-  -e DATABASE_NAME \
-  -e MYSQL_HOST \
-  image_app run.py create_db
+make upload_to_s3
 ```
 
-#### 4.4 Test Database Creation on RDS:
-
-Connect to RDS databased via docker (same as before, please set up the corresponding environment variables):
+#### 2.2 Download Raw Data from S3 (only needed if your pictures are saved on s3)
+The following command will download raw images from s3 according to the configurations in `Makefile`.
+This is only needed if you have s3 pictures that you want to download to local. For this project I saved all the raw images on s3 bucket,so download is needed for pipeline. 
+The following command will download the images to data folder for offline model tuning. 
 ```
-docker run -it --rm \
-    mysql:5.7.33 \
-    mysql \
-    -h$MYSQL_HOST \
-    -u$MYSQL_USER \
-    -p$MYSQL_PASSWORD \
-    
+make download_from_s3
 ```
 
-Then in the interactive mysql session, use the following queries to check if table is created successfully:
+<br />
 
+### 3. Featurize the raw images
+Parse the raw images and generate object and style features. 
+(Style featurizing will take a long time which is normal.)
 ```
-use msia_423_DB;
-show tables;
+make featurize
 ```
+<br />
+
+
+### 4. Offline Model Tuning 
+You can change the configurations in `model_config.yaml` and run the cluster model to check results.
+Iterate through different configurations to find the best clustering solution.
+
+#### 4.1 Run Model and Get Silhouette Chart 
+The following command will generate silhouette chart for the given configuration.
+```
+make tune_model
+```
+
+#### 4.2 Run Model and Get Cluster Result 
+The following command will generate cluster results for the given configuration.
+```
+make run_model
+```
+
+#### 4.3 Run Optimal Model and Get Cluster Results
+The following command will generate cluster dataset using the optimal configuration defined in `model_config.yaml`.
+```
+make get_cluster
+```
+<br />
+
+### 5. Create DB 
+
+#### 5.1 Create DB Locally
+```
+make create_db_local
+```
+
+#### 5.2. Create DB in RDS
+```
+make create_db
+```
+<br />
+
+### 6. Inject Data to DB
+Inject style features table, object features table and cluster result table.
+```
+make inject_data
+```
+<br />
+
+### 7. Move Images to App Serving Static Folder
+```
+make remove_outdated_app_serving_images
+```
+```
+make move_raw_images_to_static
+```
+
+<br />
+
+### 8. Run App 
+
+#### 8.1 Run Locally
+```
+make run_app
+```
+
+You can access the app via http://0.0.0.0:5000/.
+
+#### 8.2 Run on AWS ECS
+You can deploy the app to ECS using the Dockerfile in app folder.
+
+<br />
+
+
+### 9. Other Notes
+#### 9.1 Run Unit Test
+Unit test for important functions.
+```
+make tests
+```
+
+#### 9.2 Clean Up the Repo
+Clean containers, images and the repo.
+```
+make clean
+```
+
+
+
+
+
