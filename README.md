@@ -192,7 +192,6 @@ make featurize
 ```
 <br />
 
-
 ### 4. Offline Model Tuning 
 You can change the configurations in `model_config.yaml` and run the cluster model to check results.
 Iterate through different configurations to find the best clustering solution.
@@ -220,19 +219,24 @@ make get_cluster
 
 #### 5.1 Create DB Locally
 ```
-make create_db_local
+make create_db_engine_string
 ```
 
 #### 5.2. Create DB in RDS
 ```
-make create_db
+make create_db_rds
 ```
 <br />
 
 ### 6. Inject Data to DB
 Inject style features table, object features table and cluster result table.
+#### 6.1 Inject into Local DB
 ```
-make inject_data
+make inject_data_engine_string
+```
+#### 6.2 Inject into RDS
+```
+make inject_data_rds
 ```
 <br />
 
@@ -249,10 +253,16 @@ make move_raw_images_to_static
 ### 8. Run App 
 
 #### 8.1 Run Locally
+
+#### 8.1.1 Run Locally on Local DB
 ```
-make run_app
+make run_app_engine_string
 ```
 
+#### 8.1.2 Run Locally on RDS
+```
+make run_app_rds
+```
 You can access the app via http://0.0.0.0:5000/.
 
 #### 8.2 Run on AWS ECS
@@ -269,9 +279,12 @@ make tests
 ```
 
 #### 9.2 Clean Up the Repo
-Clean containers, images and the repo.
+Clean containers, images.
 ```
-make clean
+make stop_containers
+```
+```
+make clean_docker
 ```
 
 

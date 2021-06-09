@@ -1,5 +1,4 @@
-.PHONY: image, upload_to_s3, download_from_s3, download_from_s3_app, featurize_object, featurize_style, featurize, tune_model, run_model, get_cluster, create_db_local, create_db, inject_data, pipeline, run_app, stop_containers, remove_containers, clean_repo, clean, tests, remove_outdated_app_serving_images, move_raw_images_to_static, update_app_serving_images
-
+.PHONY: image, upload_to_s3, download_from_s3, featurize_object, featurize_style, featurize, tune_model, run_model, get_cluster, create_db_rds, create_db_engine_string, inject_data_rds, inject_data_engine_string, pipeline_rds, pipeline_engine_string, remove_outdated_app_serving_images, move_raw_images_to_static, run_app_rds, run_app_engine_string, stop_containers, remove_containers, remove_images, clean_docker, tests
 S3_PATH="s3://2021-msia423-xu-hao/raw/"  # path of images on S3 bucket
 LOCAL_IMAGE_PATH="./data/raw_images/"  # local path of images for offline model pipeline
 LOCAL_APP_IMAGE_PATH="./app/static/raw_images/"  # local path of images for app image serving
@@ -70,7 +69,7 @@ get_cluster:
 		--input_style=${STYLE_FEATURE_DATA_PATH} \
 		--output=${CLUSTER_FEATURE_DATA_PATH}
 
-create_db:
+create_db_rds:
 	docker run --mount type=bind,source="`pwd`",target=/app/ \
 		-e MYSQL_USER \
 		-e MYSQL_PASSWORD \
@@ -79,17 +78,12 @@ create_db:
 		-e MYSQL_HOST \
 		photo_hxq9433 run.py create_db
 
-create_db_local:
+create_db_engine_string:
 	docker run --mount type=bind,source="`pwd`",target=/app/ \
 		-e SQLALCHEMY_DATABASE_URI \
 		photo_hxq9433 run.py create_db
 
-create_db_instructor:
-	docker run --mount type=bind,source="`pwd`",target=/app/ \
-		-e SQLALCHEMY_DATABASE_URI=mysql+pymysql://msia423instructor:hxq9433@msia-423-hxq9433.cy33ytpnmyxx.us-east-2.rds.amazonaws.com:3306/msia_423_DB \
-		photo_hxq9433 run.py create_db
-
-inject_data:
+inject_data_rds:
 	docker run --mount type=bind,source="`pwd`",target=/app/ \
 		-e MYSQL_USER \
 		-e MYSQL_PASSWORD \
@@ -101,7 +95,7 @@ inject_data:
 		--input_style=${STYLE_FEATURE_DATA_PATH} \
 		--input_cluster=${CLUSTER_FEATURE_DATA_PATH}
 
-inject_data_local:
+inject_data_engine_string:
 	docker run --mount type=bind,source="`pwd`",target=/app/ \
 		-e SQLALCHEMY_DATABASE_URI \
 		photo_hxq9433 run.py inject_data \
@@ -109,18 +103,8 @@ inject_data_local:
 		--input_style=${STYLE_FEATURE_DATA_PATH} \
 		--input_cluster=${CLUSTER_FEATURE_DATA_PATH}
 
-inject_data_instructor:
-	docker run --mount type=bind,source="`pwd`",target=/app/ \
-		-e SQLALCHEMY_DATABASE_URI=mysql+pymysql://msia423instructor:hxq9433@msia-423-hxq9433.cy33ytpnmyxx.us-east-2.rds.amazonaws.com:3306/msia_423_DB \
-		photo_hxq9433 run.py inject_data \
-		--input_object=${OBJECT_FEATURE_DATA_PATH} \
-		--input_style=${STYLE_FEATURE_DATA_PATH} \
-		--input_cluster=${CLUSTER_FEATURE_DATA_PATH}
-
-
-pipeline: download_from_s3 featurize get_cluster create_db inject_data
-pipeline_local: download_from_s3 featurize get_cluster create_db_local inject_data_local
-pipeline_instructor: download_from_s3 featurize get_cluster create_db_instructor inject_data_instructor
+pipeline_rds: download_from_s3 featurize get_cluster create_db_rds inject_data_rds
+pipeline_engine_string: download_from_s3 featurize get_cluster create_db_engine_string inject_data_engine_string
 
 remove_outdated_app_serving_images:
 	rm -r ${LOCAL_APP_IMAGE_PATH}
@@ -130,7 +114,7 @@ move_raw_images_to_static:
 	mkdir ${LOCAL_IMAGE_PATH}
 	touch ${LOCAL_IMAGE_PATH_GITKEEP}
 
-run_app:
+run_app_rds:
 	docker run --mount type=bind,source="`pwd`",target=/app/ \
 		-e MYSQL_USER \
 		-e MYSQL_PASSWORD \
@@ -139,15 +123,10 @@ run_app:
 	    -e MYSQL_HOST \
 	    -p 5000:5000 photo_hxq9433 app.py
 
-run_app_local:
+run_app_engine_string:
 	docker run --mount type=bind,source="`pwd`",target=/app/ \
 		-e SQLALCHEMY_DATABASE_URI \
 	    -p 5000:5000 photo_hxq9433 app.py
-
-run_app_instructor:
-	docker run --mount type=bind,source="`pwd`",target=/app/ \
-		-e SQLALCHEMY_DATABASE_URI=mysql+pymysql://msia423instructor:hxq9433@msia-423-hxq9433.cy33ytpnmyxx.us-east-2.rds.amazonaws.com:3306/msia_423_DB \
-		-p 5000:5000 photo_hxq9433 app.py
 
 stop_containers:
 	docker kill $(docker ps -q)
@@ -162,3 +141,4 @@ clean_docker: remove_containers remove_images
 
 tests:
 	docker run photo_hxq9433 -m pytest test/*
+
